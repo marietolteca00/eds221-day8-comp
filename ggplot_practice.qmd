@@ -2,6 +2,8 @@
 title: "ggplot_practice"
 format: html
 editor: visual
+editor_options: 
+  chunk_output_type: inline
 ---
 
 ## 
@@ -14,10 +16,10 @@ library(here)
 library(janitor)
 
 # Specifically for plots:
-# library(patchwork)
+library(patchwork)
 # library(ggrepel)
 # library(gghighlight)
-# library(paletteer)
+library(paletteer)
 # library(ggExtra)
 # library(ggbeeswarm)
 # 
@@ -136,9 +138,110 @@ ggplot(data = lizard_counts,
   labs( x = "Individuals (n)",
         y = "Species Common Names" )
 ```
+## Advanced **ggplot2** customization
 
+```{r}
+ggplot(data = lizards,
+       aes(x = total_length,
+           y = weight)) +
+  geom_point() +
+  scale_x_continuous(breaks = c(0, 250, 500), # setting limits to x-axis 
+                     limits = c(0, 500)) +
+  scale_y_continuous(breaks = seq(from = 0,  # start y- axis at 0 
+                                  to = 70,  # up until 70
+                                  by = 10), # by increments of 10
+                     limits = c(0, 70)) + # add limit so 70 will show up
+  labs( x = "Total length (mm)",
+        y = " Weights (grams)") +
+  theme_minimal()
+```
 
+```{r}
+ggplot(data = lizards,
+       aes(x= total_length, y = weight))+
+  geom_point()+
+  scale_x_log10()
+```
+# counting up the number of lizards caught per day
+```{r}
+lizard_counts <- lizards %>% 
+  mutate(date = lubridate::mdy(date)) %>% 
+  count(date)
 
+# PLOT IT
+ggplot(data= lizard_counts,
+       aes(x= date, y= n)) + # this will show the date per lizard found per date
+  geom_line()+
+  scale_x_date(breaks = scales::breaks_width("2 years"), # this shows the dates as 1990-01-01 but it makes it go by increments of 2
+               labels = scales::label_date("%Y")) # upper case "Y" puts out the year (1990 year). Lower case "y" only outputs the the last two digit (92 year)
+```
+# Customization of aesthetics with 'scale_' functions
+
+```{r}
+# color gradient with just 2 colors
+ggplot(data= lizards,
+       aes(x = total_length, y = weight)) +
+  geom_point(aes(color= weight))+
+  scale_color_gradient(low = "red", high = "navy")
+
+# color gradient with more than 2 colors
+ggplot(data= lizards,
+       aes(x = total_length, y = weight)) +
+  geom_point(aes(color= weight))+
+  scale_color_gradientn(colors = c("red","navy", "pink", "orange")) #  creates color pallete
+
+# Create a gradient of color bins
+ggplot(data= lizards,
+       aes(x=total_length, y = weight)) +
+  geom_point(aes(color = weight)) +
+  scale_color_steps(low = "red", high = "navy")
+
+# Create a gradient of color bins
+ggplot(data= lizards,
+       aes(x=total_length, y = weight)) +
+  geom_point(aes(color = weight)) +
+  scale_color_steps(low = "red", high = "navy",
+                    breaks = seq(0,80, by=5))
+```
+
+# Paletteer package- Install in console using 'install.packages("paletteer")
+```{r}
+p1 <- ggplot(data = lizards,
+       aes(x = common_name, y = total_length)) +
+  geom_boxplot(aes(fill = common_name),
+               show.legend = FALSE) +
+  coord_flip()
+```
+# Median of lizards with common names
+```{r}
+# ordering (common_names)species based on median length
+lizards_mean <- lizards %>% 
+  mutate(common_name = fct_reorder(common_name,
+                                   total_length, .fun = mean)) #.fun= function
+# PLOT IT
+p2 <- ggplot(data = lizards_mean,
+       aes(y = common_name, x= total_length)) +
+  geom_boxplot(aes(fill = common_name), show.legend = FALSE) +
+  scale_fill_paletteer_d("awtools::mpalette") + # this will update the common name that is being used to fill
+  labs (x = "Total Length (mm)",
+        y = "Species") +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank())
+```
+## Patchwork to create compound
+```{r}
+# " | " puts plots next to each other
+(p1|p2) #Make consistent plots
+
+# "/" puts plots on top of each other
+(p1/p2)
+
+# combinations of next to and on top of each other
+p3 <- ((p1|p2)/ p2) & theme_minimal()
+
+# saving
+ggsave("test.png", p3) # shows up on file pane
+```
 
 
 
