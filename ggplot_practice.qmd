@@ -1,0 +1,147 @@
+---
+title: "ggplot_practice"
+format: html
+editor: visual
+---
+
+## 
+
+Attaching packages
+
+```{r}
+library(tidyverse)
+library(here)
+library(janitor)
+
+# Specifically for plots:
+# library(patchwork)
+# library(ggrepel)
+# library(gghighlight)
+# library(paletteer)
+# library(ggExtra)
+# library(ggbeeswarm)
+# 
+# # And for another dataset we'll explore:
+# library(gapminder)
+# 
+# # Spatial
+# library(sf)
+```
+
+# Reading in data csv with file path
+
+```{r}
+lizards <- read_csv(here("data_tidy", "lizards.csv"))
+```
+
+# Plots
+
+```{r}
+# ggplot essential pieces, 3 ways (that do the same thing):
+
+# Like this, First: 
+# Data and aesthetics stay consistent throughout plot
+ggplot(data = lizards, aes(x = total_length, y = weight)) + # That's 1 & 2
+  geom_point() # That's 3
+
+# Or, Second: 
+# Data stays consisten throughout plot
+ggplot(data = lizards) +
+  geom_point(aes(x = total_length, y = weight))
+
+# Or, Third:
+# Nothing Stays Consistent
+ggplot() +
+  geom_point(data = lizards, aes(x = total_length, y = weight))
+
+```
+
+# Swaping out geometries
+
+# geom_line
+
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_line() # Bad idea, just demonstrating a geom switch.
+```
+
+# geom_histogram
+
+```{r}
+ggplot(data = lizards, aes(x = total_length)) + # only needs an x-axis
+  geom_histogram()
+```
+
+# Jitterplots are usually best with *one categorical* and one *continuous variable*
+
+# geom_jitter
+
+```{r}
+ggplot(data=lizards,
+       aes(x = weight, y = common_name)) +
+  geom_jitter() # spreads them out on the y axis
+```
+
+## Aesthetic mapping
+
+### Updating based on a constant value
+
+- **Don't need to use the 'aes()' function !**
+### Use coolors.co website or search pallettes on google
+```{r}
+ggplot(data= lizards, aes(x = weight))+
+  geom_histogram(color = "#774587", # this changed the outline of the bar
+                 fill = "#c994c7", # fills in bars on histogram
+                 alpha = 0.5,  # shows transparency
+                 linetype = "dashed" # outline of bars
+      
+  )
+```
+
+## Updating aesthetics based on variables
+In that case, we need to use the 'aes()' function
+```{r}
+ggplot(data= lizards,
+       aes(x = total_length, y = weight))+
+  geom_point(aes(color = common_name),  # Defining it. Color by species
+             alpha = 0.3) # makes the points more transparent
+```
+
+## Themes
+## Updating axis labels
+```{r}
+ggplot(data= lizards, aes(x = weight, y= site)) +
+  geom_jitter(aes(color = common_name)) +
+  theme_minimal() + # got rid of grey background
+  labs( x = "Weight (g)",
+        y = "Study Site",
+        title = "Lizard weights across sites at Jornada",
+        subtitle = " Lizard Data",
+        color = "Species Legend") + # changes the legend title
+  theme(plot.title = element_text(hjust = 0.5), # Centers title
+        plot.subtitle = element_text(hjust = 0.5)) # Centers sub-title
+  
+  
+# theme(legend.position = "none" ) # Removes legend 
+
+```
+## Reorder data
+```{r}
+lizard_counts <- lizards %>% 
+  count(common_name) # counts common names, labels it as "n"
+
+ggplot(data = lizard_counts,
+       aes(x = n, y = fct_reorder(common_name,n))) + # Orders from smallest to largest
+  geom_col() +  # side-plot allows for longer titles without being squished
+  labs( x = "Individuals (n)",
+        y = "Species Common Names" )
+```
+
+
+
+
+
+
+
+
+
